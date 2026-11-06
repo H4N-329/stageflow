@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#111523" />
+  <title>StageFlow | ダンスフォーメーション</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<div id="app"><nav class="mobile-nav" aria-label="スマホ用メニュー"><button data-tab="stage" class="active">▦<small>ステージ</small></button><button data-tab="dancers">◉<small>出演者</small></button><button data-tab="settings">⚙<small>設定</small></button><button data-tab="checks">↗<small>導線</small></button></nav><div id="mobileSheetHeader" class="mobile-sheet-header" hidden><strong id="mobileSheetTitle"></strong><button id="closeMobileSheet">✕</button></div><div class="mobile-quick-actions"><button id="mobileAddDancer">＋ 人を追加</button><button id="mobileAddFrame">＋ この秒を登録</button></div>
+  <header class="topbar">
+    <div class="brand"><div class="brandmark">SF</div><div><strong>StageFlow</strong><small>SHOWCASE FORMATION STUDIO</small></div></div>
+    <div class="top-main"><input id="projectTitle" aria-label="ショーケース名" maxlength="100" value="新しいショーケース" /><span id="saveStatus" class="save-status">ローカル保存</span></div>
+    <div class="top-actions"><button class="btn quiet" id="newProject">＋ 新規</button><button class="btn quiet" id="openProjects">作品一覧</button><button class="btn quiet" id="exportJson">JSON保存</button><button class="btn primary" id="shareProject">↗ 共有</button></div>
+  </header>
+  <main class="workspace">
+    <aside class="left-panel pane">
+      <div class="mobile-settings-section"><div class="panel-top"><div><span class="eyebrow">STAGE SETUP</span><h2>ステージ設定</h2></div></div>
+      <div class="setting-grid"><label>横幅（バミリ数）<input id="stageWidth" type="number" min="2" max="40" step="1" value="14"></label><label>奥行き（バミリ数）<input id="stageDepth" type="number" min="2" max="30" step="1" value="9"></label></div>
+      <div class="setting-grid"><label>バミリ間隔（固定）<input id="markSpacing" type="number" value="90" disabled></label><label>接近警告（m）<input id="safeDistance" type="number" min="0.3" max="3" step="0.1" value="0.7"></label></div>
+      <label class="wide-label">ステージの手前（客席側） — 切替で配置・導線も自動反転</label>
+      <div class="segmented" role="group" aria-label="ステージ前後"><button id="frontBottom" class="is-active">画面下</button><button id="frontTop">画面上</button></div>
+      <label class="toggleline"><input id="gridEnabled" type="checkbox" checked> 補助グリッドを表示</label>
+      <label class="toggleline"><input id="pathsEnabled" type="checkbox" checked> 移動経路を表示</label>
+      </div><div class="mobile-dancers-section"><div class="section-divider"></div>
+      <div class="panel-heading"><div><span class="eyebrow">PERFORMERS</span><h2>ダンサー <span id="dancerCount">0/30</span></h2></div><button class="btn tiny primary" id="addDancer">＋ 追加</button></div>
+      <p class="muted hint">アイコンをドラッグして位置を変更。名前・色は下で編集できます。</p>
+      <div id="dancerList" class="dancer-list"></div>
+      <div class="left-bottom"><button id="importJson" class="btn quiet full">JSONファイルを読み込む</button><input type="file" id="importFile" accept=".json,application/json" hidden></div>
+    </div></aside>
+
+    <section class="center-col">
+      <div class="canvas-top"><div><span class="eyebrow">LIVE STAGE PREVIEW</span><div class="canvas-heading"><h2>フォーメーション</h2><span id="frameMode" class="frame-tag">登録済みの立ち位置</span></div></div><div class="canvas-top-actions"><button class="btn tiny quiet" id="addKeyframe">＋ 現在秒を登録</button><button class="btn tiny quiet" id="deleteKeyframe">この秒を削除</button></div></div>
+      <div class="stage-card">
+        <svg id="stageSvg" viewBox="0 0 1000 720" role="img" aria-label="ダンサー配置図" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <div class="stage-footer"><div class="legend"><span><i class="dot teal"></i> 選択中</span><span><i class="dot amber"></i> 接近の可能性</span><span><i class="line-legend"></i> 移動経路</span></div><span id="stageReadout">横 14 × 奥行 9（1バミリ＝90cm）</span></div>
+      <section class="timeline pane">
+        <div class="timeline-top"><div><span class="eyebrow">TIME & TRANSITION</span><h2>タイムライン</h2></div><div class="timeline-duration"><label for="totalDuration">全体の長さ</label><input id="totalDuration" type="number" min="1" max="600" step="1" value="32"><span>秒</span></div></div>
+        <div class="audio-panel"><div class="audio-head"><strong>♪ MP3音源と同期</strong><span id="audioStatus">未選択</span></div><div class="audio-actions"><label for="audioFile" class="audio-upload">＋ MP3を選択</label><input id="audioFile" type="file" accept=".mp3,audio/mpeg,audio/*" hidden><button id="audioRemove" type="button">解除</button><button id="audioFit" type="button">曲の長さに合わせる</button></div><label class="audio-check"><input type="checkbox" id="audioSync" checked> 音源の再生位置と立ち位置を同期</label><audio id="showcaseAudio" preload="metadata"></audio><small>共有作品ではMP3をクラウド保存し、閲覧URLから音源を読み込めます。</small></div><div class="transport"><button id="firstFrame" class="transport-btn" title="最初に戻る">|◀</button><button id="prevSecond" class="transport-btn" title="1秒戻る">−1s</button><button id="playButton" class="transport-btn play" title="再生">▶</button><button id="nextSecond" class="transport-btn" title="1秒進む">+1s</button><button id="lastFrame" class="transport-btn" title="最後に進む">▶|</button><div class="time-counter"><strong id="timeDisplay">00:00</strong><span id="totalDisplay">/ 00:32</span></div></div>
+        <div class="scrub-wrap"><input id="timeSlider" type="range" min="0" max="32" step="1" value="0" aria-label="秒数を指定"><div id="keyframeMarkers" class="keyframe-markers"></div></div>
+        <div id="keyframeChips" class="frame-chips"></div>
+        <div class="timeline-note">◆ は立ち位置を登録した秒数。途中の秒数は前後の立ち位置から自動で補間します。登録済みの秒ではドラッグで編集できます。</div>
+      </section>
+    </section>
+
+    <aside class="right-panel pane">
+      <span class="eyebrow">TRANSITION INSPECTOR</span><h2>導線チェック</h2>
+      <div class="metric-grid"><div class="metric"><span>選択時刻</span><strong id="metricTime">0.0 <small>s</small></strong></div><div class="metric"><span>次の登録時刻</span><strong id="metricNext">8 <small>s</small></strong></div></div>
+      <div class="section-divider"></div>
+      <h3>接近の可能性</h3><p class="muted hint">ダンサー同士の距離を時間経過に沿って確認します。動線は各区間を直線移動と仮定しています。</p>
+      <div id="collisionPanel" class="collision-panel"></div>
+      <div class="section-divider"></div>
+      <h3>選択中のダンサー</h3><div id="selectedDetails" class="selected-details muted">円をタップして選択</div>
+      <div class="section-divider"></div>
+      <h3>確認ポイント</h3><ul class="tips"><li>交差して見える導線でも、通過時刻が異なれば接近しない場合があります。</li><li>体の幅・腕の振り・振付を考慮して警告距離を調整してください。</li><li>中継地点が必要なら、その秒数に立ち位置を追加してください。</li></ul>
+      <button id="duplicateProject" class="btn quiet full">この作品を複製</button>
+    </aside>
+  </main>
+</div>
+<div id="modalBackdrop" class="modal-backdrop hidden" role="presentation">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-header"><h2 id="modalTitle"></h2><button id="modalClose" class="icon-close" aria-label="閉じる">×</button></div><div id="modalBody"></div></div>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script type="module" src="/app.js"></script>
+</body>
+</html>
